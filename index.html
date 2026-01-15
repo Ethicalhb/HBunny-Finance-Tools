@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBunny Finance Tools</title>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Beautiful Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        
+        .tool-section { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col md:flex-row">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-20">
+        <div class="font-bold text-xl tracking-tight text-gray-900">HBunny<span class="text-brand-600">.Tools</span></div>
+        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-300 z-10 absolute md:relative overflow-hidden">
+        <div class="p-6 border-b border-gray-100 hidden md:block">
+            <h1 class="font-bold text-2xl tracking-tight text-gray-900">HBunny<span class="text-brand-600">.Tools</span></h1>
+            <p class="text-xs text-gray-500 mt-1">Practical Money Logic</p>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <button onclick="switchTool('budget-planner')" id="btn-budget-planner" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg bg-brand-50 text-brand-700 transition-colors">
+                <span class="mr-3">📊</span> Budget Planner
+            </button>
+            <button onclick="switchTool('savings-goal')" id="btn-savings-goal" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                <span class="mr-3">🎯</span> Savings Goal
+            </button>
+            <button onclick="switchTool('inflation')" id="btn-inflation" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                <span class="mr-3">📉</span> Inflation Calc
+            </button>
+            <button onclick="switchTool('emi-rent')" id="btn-emi-rent" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                <span class="mr-3">🏠</span> EMI vs Rent
+            </button>
+            <button onclick="switchTool('net-worth')" id="btn-net-worth" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                <span class="mr-3">🏦</span> Net Worth
+            </button>
+            <button onclick="switchTool('subscription')" id="btn-subscription" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                <span class="mr-3">📺</span> Sub Analyzer
+            </button>
+             <button onclick="switchTool('expense-split')" id="btn-expense-split" class="nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                <span class="mr-3">🍕</span> Expense Split
+            </button>
+            
+            <div class="pt-4 mt-4 border-t border-gray-100">
+                <button onclick="resetAllData()" class="w-full flex items-center px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                   Reset All Data
+                </button>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        
+        <!-- 1. BUDGET PLANNER -->
+        <section id="budget-planner" class="tool-section max-w-5xl mx-auto">
+            <header class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">Monthly Budget Planner</h2>
+                <p class="text-gray-500">Track your sources and spending. Visualize the data.</p>
+            </header>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Total Income Card -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Total Income</label>
+                    <div class="text-3xl font-bold text-brand-600" id="bp-total-income">$0</div>
+                    <div class="text-xs text-gray-400 mt-1">Sum of all income sources</div>
+                </div>
+
+                <!-- Total Expenses Card -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Total Expenses</label>
+                    <div class="text-3xl font-bold text-gray-900" id="bp-total-expenses">$0</div>
+                    <div class="text-xs text-gray-400 mt-1">Sum of all spending</div>
+                </div>
+
+                <!-- Balance Card -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Remaining Balance</label>
+                    <div class="text-3xl font-bold text-brand-600" id="bp-balance">$0</div>
+                    <div class="absolute bottom-0 left-0 h-1 bg-brand-500 w-full transition-all duration-300" id="bp-health-bar"></div>
+                </div>
+            </div>
+
+            <!-- Input Lists Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                
+                <!-- Income List -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full">
+                    <div class="p-4 border-b border-gray-100 bg-brand-50 flex justify-between items-center">
+                        <h3 class="font-semibold text-brand-800">Income Sources</h3>
+                        <button onclick="BudgetPlanner.addItem('income')" class="text-xs bg-brand-600 text-white px-3 py-1.5 rounded hover:bg-brand-700 transition-colors">+ Add Income</button>
+                    </div>
+                    <div id="bp-income-list" class="p-4 space-y-3 flex-1 overflow-y-auto max-h-96">
+                        <!-- Dynamic Income Items -->
+                    </div>
+                </div>
+
+                <!-- Expense List -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Expenses</h3>
+                        <button onclick="BudgetPlanner.addItem('expense')" class="text-xs bg-gray-900 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors">+ Add Expense</button>
+                    </div>
+                    <div id="bp-expense-list" class="p-4 space-y-3 flex-1 overflow-y-auto max-h-96">
+                        <!-- Dynamic Expense Items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Spending Breakdown</h3>
+                <div class="relative h-64 md:h-80 w-full flex justify-center items-center">
+                    <canvas id="bp-chart"></canvas>
+                    <div id="bp-chart-empty" class="absolute text-gray-400 text-sm hidden">
+                        Add expenses to see the chart
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SAVINGS GOAL TRACKER -->
+        <section id="savings-goal" class="tool-section hidden max-w-4xl mx-auto">
+            <header class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">Savings Goal Tracker</h2>
+                <p class="text-gray-500">Visualize the timeline to your dreams.</p>
+            </header>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Goal Name</label>
+                        <input type="text" id="sg-name" placeholder="e.g. New Car" class="w-full text-lg border-b border-gray-200 py-1 focus:outline-none focus:border-brand-500" oninput="SavingsTracker.calculate()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Target Amount ($)</label>
+                        <input type="number" id="sg-target" placeholder="10000" class="w-full text-lg border-b border-gray-200 py-1 focus:outline-none focus:border-brand-500" oninput="SavingsTracker.calculate()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Already Saved ($)</label>
+                        <input type="number" id="sg-current" placeholder="0" class="w-full text-lg border-b border-gray-200 py-1 focus:outline-none focus:border-brand-500" oninput="SavingsTracker.calculate()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Monthly Contribution ($)</label>
+                        <input type="number" id="sg-monthly" placeholder="500" class="w-full text-lg border-b border-gray-200 py-1 focus:outline-none focus:border-brand-500" oninput="SavingsTracker.calculate()">
+                    </div>
+                </div>
+                
+                <div class="bg-brand-50 p-6 rounded-xl border border-brand-100 flex flex-col justify-center">
+                    <div class="mb-6">
+                        <div class="flex justify-between text-sm font-medium mb-1">
+                            <span id="sg-progress-text">0% Reached</span>
+                            <span id="sg-remaining">$0 left</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="sg-bar" class="bg-brand-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-500 text-sm">Estimated Completion</p>
+                        <h3 class="text-3xl font-bold text-gray-900" id="sg-date">---</h3>
+                        <p class="text-brand-600 font-medium mt-1" id="sg-months">0 months to go</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. INFLATION CALCULATOR -->
+        <section id="inflation" class="tool-section hidden max-w-4xl mx-auto">
+             <header class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">Inflation Calculator</h2>
+                <p class="text-gray-500">See the real value of money over time.</p>
+            </header>
+            <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-1">
+                            <label class="text-xs font-bold text-gray-400 uppercase">Current Amount</label>
+                            <input type="number" id="inf-amount" value="1000" class="w-full text-2xl border-b border-gray-200 py-2 focus:outline-none focus:border-brand-500" oninput="InflationCalc.calculate()">
+                        </div>
+                        <div class="w-24">
+                            <label class="text-xs font-bold text-gray-400 uppercase">Years</label>
+                            <input type="number" id="inf-years" value="10" class="w-full text-2xl border-b border-gray-200 py-2 focus:outline-none focus:border-brand-500" oninput="InflationCalc.calculate()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 uppercase">Avg. Inflation Rate (%)</label>
+                        <input type="range" id="inf-rate" min="1" max="15" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="InflationCalc.calculate()">
+                        <div class="text-right text-sm text-brand-600 font-bold" id="inf-rate-disp">3%</div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-8 border-t border-gray-100 text-center">
+                    <p class="text-gray-500 mb-1">In <span id="inf-res-years">10</span> years, this money will have the purchasing power of:</p>
+                    <div class="text-4xl font-bold text-gray-900" id="inf-result">$0</div>
+                    <div class="mt-4 bg-red-50 text-red-700 p-3 rounded-lg text-sm inline-block">
+                        📉 Value lost: <span id="inf-lost" class="font-bold">$0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. EMI VS RENT -->
+        <section id="emi-rent" class="tool-section hidden max-w-4xl mx-auto">
+            <header class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">EMI vs Rent</h2>
+                <p class="text-gray-500">Logic over emotion. Compare costs.</p>
+            </header>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                    <h3 class="font-bold text-gray-900 border-b pb-2">Buying (Loan)</h3>
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase">Property Price</label>
+                        <input type="number" id="er-price" placeholder="500000" class="w-full border-b py-1 focus:outline-none focus:border-brand-500" oninput="EmiRent.calculate()">
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="text-xs text-gray-400 uppercase">Interest %</label>
+                            <input type="number" id="er-rate" placeholder="7.5" class="w-full border-b py-1 focus:outline-none focus:border-brand-500" oninput="EmiRent.calculate()">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs text-gray-400 uppercase">Years</label>
+                            <input type="number" id="er-years" placeholder="20" class="w-full border-b py-1 focus:outline-none focus:border-brand-500" oninput="EmiRent.calculate()">
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <div class="text-sm text-gray-500">Monthly EMI:</div>
+                        <div class="text-xl font-bold text-brand-600" id="er-emi">$0</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                    <h3 class="font-bold text-gray-900 border-b pb-2">Renting</h3>
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase">Monthly Rent</label>
+                        <input type="number" id="er-rent" placeholder="1500" class="w-full border-b py-1 focus:outline-none focus:border-brand-500" oninput="EmiRent.calculate()">
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded text-sm text-gray-600">
+                        Comparing total cash outflow over the same <span id="er-comp-years">20</span> year period.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 bg-gray-900 text-white p-6 rounded-xl shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
+                    <div>
+                        <div class="text-gray-400 text-xs uppercase tracking-wide">Total Interest Paid</div>
+                        <div class="text-2xl font-bold text-red-400" id="er-total-int">$0</div>
+                    </div>
+                    <div>
+                         <div class="text-gray-400 text-xs uppercase tracking-wide">Total Rent Paid</div>
+                         <div class="text-2xl font-bold text-blue-400" id="er-total-rent">$0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. NET WORTH CALCULATOR -->
+        <section id="net-worth" class="tool-section hidden max-w-4xl mx-auto">
+            <header class="mb-6 flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">Net Worth Calculator</h2>
+                    <p class="text-gray-500">Assets minus Liabilities. The real number.</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-500">Net Worth</div>
+                    <div class="text-3xl font-bold text-brand-600" id="nw-total">$0</div>
+                </div>
+            </header>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Assets -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="p-4 bg-green-50 border-b border-green-100 flex justify-between items-center">
+                        <h3 class="font-bold text-green-800">Assets (+)</h3>
+                        <button onclick="NetWorth.addItem('asset')" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Add</button>
+                    </div>
+                    <div id="nw-assets-list" class="p-4 space-y-2"></div>
+                    <div class="p-3 bg-gray-50 text-right font-bold text-gray-700 border-t" id="nw-assets-total">$0</div>
+                </div>
+
+                <!-- Liabilities -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="p-4 bg-red-50 border-b border-red-100 flex justify-between items-center">
+                        <h3 class="font-bold text-red-800">Liabilities (-)</h3>
+                        <button onclick="NetWorth.addItem('liability')" class="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Add</button>
+                    </div>
+                    <div id="nw-liab-list" class="p-4 space-y-2"></div>
+                    <div class="p-3 bg-gray-50 text-right font-bold text-gray-700 border-t" id="nw-liab-total">$0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. SUBSCRIPTION ANALYZER -->
+        <section id="subscription" class="tool-section hidden max-w-4xl mx-auto">
+             <header class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">Subscription Analyzer</h2>
+                <p class="text-gray-500">Small leaks sink great ships.</p>
+            </header>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <h3 class="font-semibold text-gray-800">Your Subscriptions</h3>
+                        <button onclick="SubAnalyzer.add()" class="text-xs bg-gray-900 text-white px-3 py-1.5 rounded">+ Add New</button>
+                    </div>
+                    <div id="sub-list" class="p-4 space-y-3"></div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="text-xs font-bold text-gray-400 uppercase mb-1">Monthly Cost</div>
+                        <div class="text-3xl font-bold text-gray-900" id="sub-monthly">$0</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="text-xs font-bold text-gray-400 uppercase mb-1">Yearly Cost</div>
+                        <div class="text-3xl font-bold text-gray-900" id="sub-yearly">$0</div>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                        <div class="text-xs font-bold text-red-400 uppercase mb-1">Cost over 5 Years</div>
+                        <div class="text-3xl font-bold text-red-700" id="sub-5year">$0</div>
+                        <p class="text-xs text-red-500 mt-2">Could be invested instead!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. EXPENSE SPLITTER -->
+        <section id="expense-split" class="tool-section hidden max-w-2xl mx-auto">
+             <header class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">Expense Splitter</h2>
+                <p class="text-gray-500">Simple math for groups. No accounts needed.</p>
+            </header>
+            
+            <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Total Bill Amount</label>
+                    <input type="number" id="es-bill" placeholder="0.00" class="w-full text-4xl font-bold border-b-2 border-gray-200 focus:border-brand-500 outline-none py-2" oninput="ExpenseSplitter.calculate()">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tip / Tax (%)</label>
+                         <input type="number" id="es-tip" value="0" class="w-full text-xl border-b border-gray-200 focus:border-brand-500 outline-none py-2" oninput="ExpenseSplitter.calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Number of People</label>
+                        <div class="flex items-center">
+                            <button onclick="ExpenseSplitter.changePeople(-1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 font-bold text-lg">-</button>
+                            <span id="es-people" class="flex-1 text-center text-xl font-bold">2</span>
+                            <button onclick="ExpenseSplitter.changePeople(1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 font-bold text-lg">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-8 border-t border-gray-100">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 font-medium">Per Person</span>
+                        <span class="text-4xl font-bold text-brand-600" id="es-result">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-sm text-gray-400">
+                        <span>Total Pay</span>
+                        <span id="es-total-pay">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- COMMON UTILS ---
+        const fmtMoney = (num) => '$' + parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+        
+        // --- GLOBAL NAVIGATION ---
+        function switchTool(toolId) {
+            document.querySelectorAll('.tool-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(toolId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors';
+            });
+            const activeBtn = document.getElementById('btn-' + toolId);
+            if(activeBtn) activeBtn.className = 'nav-btn w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg bg-brand-50 text-brand-700 transition-colors';
+            
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
+        }
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+             const sb = document.getElementById('sidebar');
+             sb.classList.toggle('hidden');
+             sb.classList.toggle('fixed'); sb.classList.toggle('z-50'); sb.classList.toggle('w-3/4');
+        });
+
+        // --- 1. BUDGET PLANNER (REWRITTEN) ---
+        const BudgetPlanner = {
+            data: { 
+                incomes: [{id:1, name:'Salary', amount:0}], 
+                expenses: [{id:1, name:'Rent', amount:0}, {id:2, name:'Food', amount:0}] 
+            },
+            chartInstance: null,
+
+            init() { 
+                const s = localStorage.getItem('hb_budget'); 
+                if(s) {
+                    const parsed = JSON.parse(s);
+                    // Migration: If old data has singular 'income' property, convert to array
+                    if(parsed.income !== undefined && !parsed.incomes) {
+                         this.data.expenses = parsed.expenses || [];
+                         this.data.incomes = [{id: Date.now(), name: 'Main Income', amount: parseFloat(parsed.income) || 0}];
+                    } else {
+                         this.data = parsed;
+                    }
+                }
+                this.renderAll(); 
+                this.calculate(); 
+            },
+
+            save() { localStorage.setItem('hb_budget', JSON.stringify(this.data)); },
+
+            addItem(type) { 
+                const list = type === 'income' ? this.data.incomes : this.data.expenses;
+                list.push({id:Date.now(), name:'', amount:0}); 
+                this.renderAll(); 
+                this.save(); 
+                // Focus new item
+                setTimeout(() => {
+                    const inputs = document.querySelectorAll(`#bp-${type}-list input[placeholder="Name"]`);
+                    if(inputs.length) inputs[inputs.length - 1].focus();
+                }, 50);
+            },
+
+            remove(type, id) { 
+                if(type === 'income') {
+                    this.data.incomes = this.data.incomes.filter(e=>e.id!==id); 
+                } else {
+                    this.data.expenses = this.data.expenses.filter(e=>e.id!==id); 
+                }
+                this.renderAll(); 
+                this.calculate(); 
+                this.save(); 
+            },
+
+            update(type, id, k, v) { 
+                const list = type === 'income' ? this.data.incomes : this.data.expenses;
+                const i = list.find(e=>e.id===id); 
+                if(i) { 
+                    i[k] = k==='amount'?parseFloat(v)||0:v; 
+                    this.save(); 
+                    if(k==='amount') this.calculate(); 
+                }
+            },
+
+            renderAll() {
+                this.renderList('income', this.data.incomes);
+                this.renderList('expense', this.data.expenses);
+            },
+
+            renderList(type, items) {
+                const c = document.getElementById(`bp-${type}-list`); 
+                c.innerHTML='';
+                items.forEach(e => {
+                    c.innerHTML += `<div class="flex items-center space-x-2 mb-2 group">
+                        <input class="flex-1 border-b py-1 text-sm outline-none focus:border-brand-500 bg-transparent placeholder-gray-300" placeholder="Name" value="${e.name}" oninput="BudgetPlanner.update('${type}',${e.id},'name',this.value)">
+                        <div class="w-24 relative">
+                            <span class="absolute left-0 text-gray-400 text-sm">$</span>
+                            <input type="number" class="w-full border-b py-1 pl-3 text-sm text-right outline-none focus:border-brand-500 bg-transparent font-medium ${type === 'income' ? 'text-brand-700' : 'text-gray-700'}" placeholder="0" value="${e.amount||''}" oninput="BudgetPlanner.update('${type}',${e.id},'amount',this.value)">
+                        </div>
+                        <button onclick="BudgetPlanner.remove('${type}',${e.id})" class="text-gray-300 hover:text-red-500 opacity-50 group-hover:opacity-100 transition-opacity px-1">×</button>
+                    </div>`;
+                });
+            },
+
+            calculate() {
+                const totalIncome = this.data.incomes.reduce((a,b)=>a+b.amount,0);
+                const totalExpense = this.data.expenses.reduce((a,b)=>a+b.amount,0);
+                const bal = totalIncome - totalExpense;
+
+                document.getElementById('bp-total-income').innerText = fmtMoney(totalIncome);
+                document.getElementById('bp-total-expenses').innerText = fmtMoney(totalExpense);
+                
+                const bEl = document.getElementById('bp-balance');
+                bEl.innerText = fmtMoney(bal);
+                bEl.className = bal < 0 ? 'text-3xl font-bold text-red-600' : 'text-3xl font-bold text-brand-600';
+                
+                const bar = document.getElementById('bp-health-bar');
+                if(bal < 0) bar.className = 'absolute bottom-0 left-0 h-1 bg-red-500 w-full transition-all duration-300';
+                else bar.className = 'absolute bottom-0 left-0 h-1 bg-brand-500 w-full transition-all duration-300';
+
+                this.updateChart(this.data.expenses);
+                this.save();
+            },
+
+            updateChart(expenses) {
+                const ctx = document.getElementById('bp-chart');
+                const emptyMsg = document.getElementById('bp-chart-empty');
+                
+                // Filter out zero amounts or empty names for cleaner chart
+                const validData = expenses.filter(e => e.amount > 0);
+
+                if (validData.length === 0) {
+                    if (this.chartInstance) {
+                        this.chartInstance.destroy();
+                        this.chartInstance = null;
+                    }
+                    emptyMsg.classList.remove('hidden');
+                    return;
+                }
+                
+                emptyMsg.classList.add('hidden');
+                
+                const labels = validData.map(e => e.name || 'Other');
+                const data = validData.map(e => e.amount);
+                const colors = [
+                    '#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', 
+                    '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#64748b'
+                ];
+
+                if (this.chartInstance) {
+                    this.chartInstance.data.labels = labels;
+                    this.chartInstance.data.datasets[0].data = data;
+                    this.chartInstance.data.datasets[0].backgroundColor = colors.slice(0, data.length);
+                    this.chartInstance.update();
+                } else {
+                    this.chartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: colors.slice(0, data.length),
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        usePointStyle: true,
+                                        boxWidth: 8,
+                                        font: { family: 'Inter', size: 12 }
+                                    }
+                                }
+                            },
+                            layout: {
+                                padding: 20
+                            }
+                        }
+                    });
+                }
+            }
+        };
+
+        // --- 2. SAVINGS TRACKER ---
+        const SavingsTracker = {
+            init() {
+                const d = JSON.parse(localStorage.getItem('hb_savings') || '{}');
+                if(d.name) document.getElementById('sg-name').value = d.name;
+                if(d.target) document.getElementById('sg-target').value = d.target;
+                if(d.current) document.getElementById('sg-current').value = d.current;
+                if(d.monthly) document.getElementById('sg-monthly').value = d.monthly;
+                this.calculate();
+            },
+            calculate() {
+                const t = getVal('sg-target'), c = getVal('sg-current'), m = getVal('sg-monthly');
+                const name = document.getElementById('sg-name').value;
+                localStorage.setItem('hb_savings', JSON.stringify({name, target:t, current:c, monthly:m}));
+                
+                if(t <= 0) return;
+                const rem = Math.max(0, t - c);
+                const pct = Math.min(100, Math.round((c / t) * 100));
+                
+                document.getElementById('sg-bar').style.width = pct + '%';
+                document.getElementById('sg-progress-text').innerText = pct + '% Reached';
+                document.getElementById('sg-remaining').innerText = fmtMoney(rem) + ' left';
+                
+                if(m > 0 && rem > 0) {
+                    const months = Math.ceil(rem / m);
+                    const d = new Date(); d.setMonth(d.getMonth() + months);
+                    document.getElementById('sg-date').innerText = d.toLocaleDateString(undefined, {month:'short', year:'numeric'});
+                    document.getElementById('sg-months').innerText = `${months} months to go`;
+                } else if (rem <= 0) {
+                     document.getElementById('sg-date').innerText = "Goal Met!";
+                     document.getElementById('sg-months').innerText = "Great job!";
+                } else {
+                    document.getElementById('sg-date').innerText = "---";
+                    document.getElementById('sg-months').innerText = "Enter monthly saving";
+                }
+            }
+        };
+
+        // --- 3. INFLATION ---
+        const InflationCalc = {
+             init() { this.calculate(); },
+             calculate() {
+                 const amt = getVal('inf-amount');
+                 const yrs = getVal('inf-years');
+                 const rate = document.getElementById('inf-rate').value;
+                 
+                 document.getElementById('inf-rate-disp').innerText = rate + '%';
+                 document.getElementById('inf-res-years').innerText = yrs;
+                 
+                 // Formula: Present Value = Future Amount / (1 + r)^n
+                 // Wait, usually users want: "What will $1000 be worth?". 
+                 // Real Value = Amount / (1 + r/100)^n
+                 const realVal = amt / Math.pow((1 + rate/100), yrs);
+                 const lost = amt - realVal;
+                 
+                 document.getElementById('inf-result').innerText = fmtMoney(realVal);
+                 document.getElementById('inf-lost').innerText = '-' + fmtMoney(lost);
+             }
+        };
+
+        // --- 4. EMI vs RENT ---
+        const EmiRent = {
+            init() { this.calculate(); },
+            calculate() {
+                const P = getVal('er-price'), r = getVal('er-rate'), n = getVal('er-years'), rent = getVal('er-rent');
+                document.getElementById('er-comp-years').innerText = n || 0;
+                
+                // EMI
+                let emi = 0, totalInt = 0;
+                if(P > 0 && r > 0 && n > 0) {
+                    const mr = r / 1200;
+                    const m = n * 12;
+                    emi = P * mr * Math.pow(1+mr, m) / (Math.pow(1+mr, m) - 1);
+                    totalInt = (emi * m) - P;
+                }
+                document.getElementById('er-emi').innerText = fmtMoney(emi) + '/mo';
+                document.getElementById('er-total-int').innerText = fmtMoney(totalInt);
+                
+                // Rent
+                const totalRent = rent * 12 * n;
+                document.getElementById('er-total-rent').innerText = fmtMoney(totalRent);
+            }
+        };
+
+        // --- 5. NET WORTH ---
+        const NetWorth = {
+            data: { assets: [], liabilities: [] },
+            init() {
+                const s = localStorage.getItem('hb_networth');
+                if(s) this.data = JSON.parse(s);
+                this.render(); this.calc();
+            },
+            addItem(type) {
+                const list = type==='asset' ? this.data.assets : this.data.liabilities;
+                list.push({id:Date.now(), name:'', amount:0});
+                this.render(); this.save();
+            },
+            update(type, id, val, field) {
+                 const list = type==='asset' ? this.data.assets : this.data.liabilities;
+                 const item = list.find(i=>i.id===id);
+                 if(item) { item[field] = field==='amount'?parseFloat(val)||0:val; this.save(); if(field==='amount')this.calc(); }
+            },
+            remove(type, id) {
+                 if(type==='asset') this.data.assets = this.data.assets.filter(i=>i.id!==id);
+                 else this.data.liabilities = this.data.liabilities.filter(i=>i.id!==id);
+                 this.render(); this.calc(); this.save();
+            },
+            save() { localStorage.setItem('hb_networth', JSON.stringify(this.data)); },
+            render() {
+                const r = (list, type, cId) => {
+                    const el = document.getElementById(cId); el.innerHTML = '';
+                    list.forEach(i => {
+                        el.innerHTML += `<div class="flex items-center space-x-2 mb-2 text-sm">
+                        <input class="flex-1 border-b border-gray-100 py-1 outline-none focus:border-brand-500" placeholder="Name" value="${i.name}" oninput="NetWorth.update('${type}',${i.id},this.value,'name')">
+                        <input type="number" class="w-24 text-right border-b border-gray-100 py-1 outline-none focus:border-brand-500" placeholder="0" value="${i.amount||''}" oninput="NetWorth.update('${type}',${i.id},this.value,'amount')">
+                        <button onclick="NetWorth.remove('${type}',${i.id})" class="text-gray-300 hover:text-red-500">×</button></div>`;
+                    });
+                };
+                r(this.data.assets, 'asset', 'nw-assets-list');
+                r(this.data.liabilities, 'liability', 'nw-liab-list');
+            },
+            calc() {
+                const a = this.data.assets.reduce((s,i)=>s+i.amount,0);
+                const l = this.data.liabilities.reduce((s,i)=>s+i.amount,0);
+                document.getElementById('nw-assets-total').innerText = fmtMoney(a);
+                document.getElementById('nw-liab-total').innerText = fmtMoney(l);
+                const nw = a - l;
+                document.getElementById('nw-total').innerText = fmtMoney(nw);
+            }
+        };
+
+        // --- 6. SUBSCRIPTION ---
+        const SubAnalyzer = {
+            subs: [],
+            init() {
+                const s = localStorage.getItem('hb_subs');
+                if(s) this.subs = JSON.parse(s);
+                this.render(); this.calc();
+            },
+            add() { this.subs.push({id:Date.now(), name:'', cost:0}); this.render(); this.save(); },
+            update(id, k, v) { const i = this.subs.find(s=>s.id===id); if(i){ i[k]=k==='cost'?parseFloat(v)||0:v; this.save(); if(k==='cost')this.calc();} },
+            remove(id) { this.subs = this.subs.filter(s=>s.id!==id); this.render(); this.calc(); this.save(); },
+            save() { localStorage.setItem('hb_subs', JSON.stringify(this.subs)); },
+            render() {
+                 const c = document.getElementById('sub-list'); c.innerHTML='';
+                 this.subs.forEach(s => {
+                     c.innerHTML += `<div class="flex items-center space-x-3 mb-2 bg-gray-50 p-2 rounded">
+                     <input class="flex-1 bg-transparent border-b border-gray-200 text-sm outline-none" placeholder="Netflix, Gym..." value="${s.name}" oninput="SubAnalyzer.update(${s.id},'name',this.value)">
+                     <div class="flex items-center w-24"><span class="text-xs text-gray-400 mr-1">$</span><input type="number" class="w-full bg-transparent border-b border-gray-200 text-sm outline-none" value="${s.cost||''}" oninput="SubAnalyzer.update(${s.id},'cost',this.value)"></div>
+                     <button onclick="SubAnalyzer.remove(${s.id})" class="text-gray-400 hover:text-red-500">×</button></div>`;
+                 });
+            },
+            calc() {
+                const m = this.subs.reduce((a,b)=>a+b.cost,0);
+                document.getElementById('sub-monthly').innerText = fmtMoney(m);
+                document.getElementById('sub-yearly').innerText = fmtMoney(m*12);
+                document.getElementById('sub-5year').innerText = fmtMoney(m*12*5);
+            }
+        };
+
+        // --- 7. EXPENSE SPLITTER ---
+        const ExpenseSplitter = {
+            people: 2,
+            init() {}, // No save needed for this simple tool
+            changePeople(d) {
+                this.people = Math.max(1, this.people + d);
+                document.getElementById('es-people').innerText = this.people;
+                this.calculate();
+            },
+            calculate() {
+                const bill = getVal('es-bill');
+                const tip = getVal('es-tip');
+                const total = bill + (bill * (tip/100));
+                const per = total / this.people;
+                
+                document.getElementById('es-total-pay').innerText = fmtMoney(total);
+                document.getElementById('es-result').innerText = fmtMoney(per);
+            }
+        };
+
+        // --- SYSTEM RESET ---
+        function resetAllData() {
+            if(confirm("Clear all data from all tools?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- INIT ALL ---
+        document.addEventListener('DOMContentLoaded', () => {
+            BudgetPlanner.init();
+            SavingsTracker.init();
+            InflationCalc.init();
+            EmiRent.init();
+            NetWorth.init();
+            SubAnalyzer.init();
+            ExpenseSplitter.init();
+        });
+
+    </script>
+</body>
+</html>
